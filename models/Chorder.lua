@@ -8,7 +8,7 @@ arguments = {
       ["locked"] = false,
       ["name"] = "chord.root",
       ["linked"] = false,
-      ["value"] = 57,
+      ["value"] = 57.336,
       ["properties"] = {
           ["min"] = 0,
           ["display_as"] = "note",
@@ -66,7 +66,7 @@ arguments = {
       ["locked"] = false,
       ["name"] = "chord.inversion",
       ["linked"] = false,
-      ["value"] = 0,
+      ["value"] = -1,
       ["properties"] = {
           ["zero_based"] = false,
           ["max"] = 3,
@@ -97,22 +97,19 @@ presets = {
 data = {
   ["interval_octave"] = "return 12",
   ["interval_minor_third"] = "return 3",
-  ["noteBass"] = [[return function()
-  local root_octave = math.floor(data.argsRoot()/ data.interval_octave)
-  local octave_diff = root_octave - args.bass.octave
-
-  return data.argsRoot() - (octave_diff * data.interval_octave)
+  ["noteRoot"] = [[return function()
+  return data.argsRoot()
 end]],
   ["chord_qualities"] = "return { \"major\", \"minor\" }",
-  ["interval_major_third"] = "return 4",
+  ["interval_major_seventh"] = "return 11",
   ["interval_minor_seventh"] = "return 10",
   ["invert"] = [[return function(notes, inversion)
   local first = 1
   local last = inversion
   local interval = data.interval_octave
   
-  if data.argsInversion() < 0 then
-    first = #notes + inversion
+  if inversion < 0 then
+    first = #notes + inversion + 1
     last = #notes
     interval = -data.interval_octave
   end
@@ -124,8 +121,11 @@ end]],
   ["root"] = [[return function()
   return data.noteRoot()
 end]],
-  ["noteRoot"] = [[return function()
-  return data.argsRoot()
+  ["noteBass"] = [[return function()
+  local root_octave = math.floor(data.argsRoot()/ data.interval_octave)
+  local octave_diff = root_octave - args.bass.octave
+
+  return data.argsRoot() - (octave_diff * data.interval_octave)
 end]],
   ["interval_fifth"] = "return 7",
   ["argsInversion"] = [[return function()
@@ -161,7 +161,7 @@ end]],
 
   return data.argsRoot() + seventh_value
 end]],
-  ["interval_major_seventh"] = "return 11",
+  ["interval_major_third"] = "return 4",
 },
 events = {
 },
