@@ -8,7 +8,7 @@ arguments = {
       ["locked"] = false,
       ["name"] = "chord.root",
       ["linked"] = false,
-      ["value"] = 64.284,
+      ["value"] = 57,
       ["properties"] = {
           ["min"] = 0,
           ["max"] = 119,
@@ -96,27 +96,11 @@ presets = {
 },
 data = {
   ["noteFifth"] = [[return function()
-  local fifth_offset = 0
-
-  if args.chord.inversion > 2 then
-    fifth_offset = data.interval_octave
-  elseif args.chord.inversion < -1 then
-    fifth_offset = -data.interval_octave
-  end
-
-  return data.argsRoot() + data.interval_fifth + fifth_offset
+  return data.argsRoot() + data.interval_fifth
 end]],
   ["interval_minor_third"] = "return 3",
-  ["chord_qualities"] = "return { \"major\", \"minor\" }",
-  ["root"] = [[return function()
-  return data.noteRoot()
-end]],
   ["noteRoot"] = [[return function()
-  local root_offset = 0
-  if args.chord.inversion > 0 then
-    root_offset = data.interval_octave
-  end
-  return data.argsRoot() + root_offset
+  return data.argsRoot()
 end]],
   ["noteSeventh"] = [[return function()
   local seventh_quality = data.seventh_qualities[args.ext.quality_7]
@@ -126,12 +110,28 @@ end]],
   elseif seventh_quality == "minor" then
     seventh_value = data.interval_minor_seventh
   end
-  local seventh_offset = 0
-  if args.chord.inversion < 0 then
-    seventh_offset = -data.interval_octave
-  end
 
-  return data.argsRoot() + seventh_value + seventh_offset
+  return data.argsRoot() + seventh_value
+end]],
+  ["interval_major_third"] = "return 4",
+  ["interval_minor_seventh"] = "return 10",
+  ["invert"] = [[return function()
+  local first = 1
+  local last = data.argsInversion()
+  local interval = data.interval_octave
+  
+  if data.argsInversion() < 0 then
+    first = #notes + data.argsInversion()
+    last = #notes
+    interval = -data.interval_octave
+  end
+  
+  for i=first, last do
+    notes[i] = notes[i] + interval
+  end
+end]],
+  ["root"] = [[return function()
+  return data.noteRoot()
 end]],
   ["noteBass"] = [[return function()
   local root_octave = math.floor(data.argsRoot()/ data.interval_octave)
@@ -140,22 +140,16 @@ end]],
   return data.argsRoot() - (octave_diff * data.interval_octave)
 end]],
   ["interval_fifth"] = "return 7",
-  ["interval_major_third"] = "return 4",
-  ["seventh_qualities"] = "return { \"none\", \"major\", \"minor\" }",
+  ["argsInversion"] = [[return function()
+  return tonumber(args.chord.inversion)
+end]],
+  ["interval_octave"] = "return 12",
   ["argsRoot"] = [[return function()
   return math.floor(args.chord.root)
 end]],
-  ["interval_minor_seventh"] = "return 10",
-  ["interval_major_seventh"] = "return 11",
-  ["interval_octave"] = "return 12",
+  ["seventh_qualities"] = "return { \"none\", \"major\", \"minor\" }",
   ["noteThird"] = [[return function()
   local quality = data.chord_qualities[args.chord.quality]
-  local third_offset = 0
-  if args.chord.inversion > 1 then
-    third_offset = data.interval_octave
-  elseif args.chord.inversion < -2 then
-    third_offset = -data.interval_octave
-  end
 
   local third_value
   if quality == "major" then
@@ -164,8 +158,10 @@ end]],
     third_value = data.interval_minor_third
   end
 
-  return data.argsRoot() + third_value + third_offset
+  return data.argsRoot() + third_value
 end]],
+  ["chord_qualities"] = "return { \"major\", \"minor\" }",
+  ["interval_major_seventh"] = "return 11",
 },
 events = {
 },
@@ -175,20 +171,24 @@ options = {
 callback = [[
 xline = table.rcopy(EMPTY_XLINE)
 
-local notes = {
+
+notes = {
   data.noteRoot(),
   data.noteThird(),
   data.noteFifth(),
   data.noteSeventh(),
-  data.noteBass(),
 }
 
+notes[#notes+1] = data.noteBass()
+data.invert()
+
 table.sort(notes)
+rprint(notes)
+
+print("success!")
 
 for i=1,#notes do
   xline.note_columns[i].note_value = notes[i]
 end
-
-print("success!")
 ]],
 }
